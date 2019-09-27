@@ -1,0 +1,15 @@
+curl -i -X POST \
+-H "Content-Type: application/json" \
+-H "Accept: application/json" \
+"https://www.donedeal.ie/search/api/v4/find/" \
+-d '{"year_from": "2010", "year_to": "2010", "fuelType": "Petrol", "section": "cars", "adType": "forsale"}'
+
+curl -X POST -H "Content-Type: application/json" \
+-H "Accept: application/json" \
+"https://www.donedeal.ie/search/api/v4/find/" \
+-d '{"year_from": "2010", "year_to": "2010", "fuelType": "Petrol", "section": "cars", "adType": "forsale"}'
+
+curl -X POST -H "Content-Type: application/json" \
+-H "Accept: application/json" \
+"https://www.donedeal.ie/search/api/v4/find/" \
+-d '{"fuelType":"Petrol","year_from":"2010","year_to":"2011","section":"cars","adType":"forsale","sort":"relevance desc","priceType":"Euro","mileageType":"Kilometres","max":30,"start":0,"viewType":"list","dependant":[{"parentName":"make","parentValue":"Volkswagen","childName":"model","childValues":["Golf"]}]}'
