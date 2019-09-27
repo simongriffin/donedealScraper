@@ -1,6 +1,8 @@
 import requests
 import json
 import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.cm as cm
 from pprint import pprint
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
@@ -9,7 +11,7 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 url = 'https://api.donedeal.ie/search/api/v4/find/'
 
 params = '{ \
-	"fuelType":"Petrol", \
+	"fuelType":"Diesel", \
 	"year_from":"2010", \
 	"year_to":"2010", \
 	"section":"cars", \
@@ -20,9 +22,9 @@ params = '{ \
 	"max":30,"start":0, \
 	"viewType":"list", \
 	"dependant":[{"parentName":"make", \
-	"parentValue":"Ford", \
+	"parentValue":"Volkswagen", \
 	"childName":"model", \
-	"childValues":["Focus"]}] \
+	"childValues":["Golf"]}] \
 	}'
 
 headers = {
@@ -35,6 +37,8 @@ priceStr = []
 mileageStr = []
 price = []
 mileage = []
+adUrl = []
+currency = []
 
 def getAdData():
 	adsData = requests.post(url, data=params, headers=headers, verify=False, allow_redirects=False)
@@ -51,17 +55,28 @@ def getAdData():
 		if not ("price" not in ad or len(ad["keyInfo"]) < 3):
 			priceStr.append(ad["price"])
 			mileageStr.append(ad["keyInfo"][2])
+			adUrl.append(ad["friendlyUrl"])
+			currency.append(ad["currency"])
 			# print ("Ad-" + str(i) + "\n\tpriceStr: " + priceStr[i] + "\n\tMileage: " + mileage[i] + "\n")
 		i += 1
 
 # Convert price strings to ints
 def getPrice():
+
+	i = 0
 	for prc in priceStr:
 		strLen = len(prc)
 		if strLen > 4:
-			price.append(int(prc[0:strLen-4] + prc[strLen-3:strLen]))
+			priceNum = int(prc[0:strLen-4] + prc[strLen-3:strLen])
 		else:
-			price.append(int(prc))
+			priceNum = int(prc)
+
+		if currency[i] != "EUR":
+			priceNum = priceNum * 1.12
+
+		price.append(priceNum)
+
+		i += 1
 
 # Convert mileage strings to ints and convert to kilometres
 def getMileage():
@@ -79,18 +94,23 @@ def getMileage():
 
 # Plot price vs mileage
 def plotData():
-	plt.plot(mileage, price, 'ro')
+	# plt.plot(mileage, price, 'ro')
+	# plt.xlabel('Mileage (km)')
+	# plt.ylabel('Price (€)')
+	# plt.show()
+
+	f = plt.figure()
+	s = plt.scatter(mileage, price)
 	plt.xlabel('Mileage (km)')
 	plt.ylabel('Price (€)')
-	plt.show()
+	s.set_urls(adUrl)
+	f.savefig('adsData.svg')
 
 def main():
     getAdData()
     getPrice()
     getMileage()
     plotData()
-    # for prc in price:
-    # 	print(prc)
 
 if __name__ == "__main__":
     main()
