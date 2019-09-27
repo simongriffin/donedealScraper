@@ -20,9 +20,9 @@ params = '{ \
 	"max":30,"start":0, \
 	"viewType":"list", \
 	"dependant":[{"parentName":"make", \
-	"parentValue":"Volkswagen", \
+	"parentValue":"Ford", \
 	"childName":"model", \
-	"childValues":["Golf"]}] \
+	"childValues":["Focus"]}] \
 	}'
 
 headers = {
@@ -48,7 +48,7 @@ def getAdData():
 
 	# Add priceStr and mileage data to lists
 	for ad in jsonAdsData["ads"]:
-		if not ("price" not in ad or "keyInfo" not in ad):
+		if not ("price" not in ad or len(ad["keyInfo"]) < 3):
 			priceStr.append(ad["price"])
 			mileageStr.append(ad["keyInfo"][2])
 			# print ("Ad-" + str(i) + "\n\tpriceStr: " + priceStr[i] + "\n\tMileage: " + mileage[i] + "\n")
@@ -70,7 +70,7 @@ def getMileage():
 		if strLen > 7:
 			kmVal = int(km[0:strLen-7] + km[strLen-6:strLen-3])
 		else:
-			kmVal = int(km)
+			kmVal = int(km[0:strLen-3])
 		
 		if km[strLen-2:strLen] == "mi":
 			mileage.append(kmVal * 1.60934)
