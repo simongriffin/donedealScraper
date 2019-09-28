@@ -115,12 +115,12 @@ def getPrice():
 
 # Convert mileage strings to ints and convert to kilometres
 def getMileage():
+
 	for km in mileageStr:
 		strLen = len(km)
 		if strLen > 11:
 			kmVal = int(km[0:strLen-11] + km[strLen-10:strLen-7] + km[strLen-6:strLen-3])
 		elif strLen <= 11 and strLen > 7:
-		# if strLen > 7:
 			kmVal = int(km[0:strLen-7] + km[strLen-6:strLen-3])
 		else:
 			kmVal = int(km[0:strLen-3])
@@ -139,6 +139,7 @@ def getMileage():
 
 # Plot price vs mileage
 def plotData(make, model):
+
 	f = plt.figure(figsize=(10,10))
 	s = plt.scatter(mileage, price)
 	plt.title(make + " " + model)
@@ -148,7 +149,7 @@ def plotData(make, model):
 	f.savefig('adsData.svg')
 
 def main():
-	# print(params)
+
 	inputParams = getInputParams()
 	make, model = inputParams[0], inputParams[1]
 	getAdsData(inputParams)
@@ -158,9 +159,3 @@ def main():
 
 if __name__ == "__main__":
 	main()
-
-# if "priceStr" not in jsonAdsData["ads"][0]:
-# 	print("False")
-# else:
-# 	print("True")
-# numberOfAds = len(jsonAdsData["ads"])
