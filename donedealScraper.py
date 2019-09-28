@@ -128,7 +128,7 @@ def getMileage():
 		# If the user has given a value of 120 miles, they mean 120,000 miles
 		# If mileage is over 1 million, divide by 10
 		if kmVal < 1000:
-			kmVal = kmVal * 100
+			kmVal = kmVal * 1000
 		elif kmVal > 1000000:
 			kmVal = kmVal // 10
 
@@ -139,7 +139,7 @@ def getMileage():
 
 # Plot price vs mileage
 def plotData(make, model):
-	f = plt.figure()
+	f = plt.figure(figsize=(10,10))
 	s = plt.scatter(mileage, price)
 	plt.title(make + " " + model)
 	plt.xlabel('Mileage (km)')
