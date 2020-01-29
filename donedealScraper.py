@@ -9,7 +9,6 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-url = 'https://api.donedeal.ie/search/api/v4/find/'
 priceStr = []
 mileageStr = []
 price = []
@@ -17,6 +16,7 @@ mileage = []
 adUrl = []
 currency = [] 
 
+# POST Request
 headers = {
 	'Content-Type': 'application/json',
 	'Accept': 'application/json',
@@ -34,7 +34,7 @@ def getInputParams():
 		  [sg.Text('Model', size=(15, 1)), sg.InputText('Focus')],
 		  [sg.Text('Year From', size=(15, 1)), sg.InputText('2010')],
 		  [sg.Text('Year To', size=(15, 1)), sg.InputText('2010')],
-		  [sg.Text('Fuel Type', size=(15, 1)), sg.InputText('Diesel')],
+		  [sg.Text('Fuel Type', size=(15, 1)), sg.InputText('Petrol')],
 		  [sg.Submit(), sg.Cancel()]
 		 ]
 
@@ -44,6 +44,9 @@ def getInputParams():
 
 # Get ad data from each page
 def getAdsDataStrings(inputParams, start, end):
+
+	# Search URL
+	url = 'https://api.donedeal.ie/search/api/v4/find/'
 
 	params = '{ \
 			"fuelType":"' + inputParams[4] + '", \
@@ -65,7 +68,7 @@ def getAdsDataStrings(inputParams, start, end):
 	adsData = requests.post(url, data=params, headers=headers, verify=False, allow_redirects=False)
 	jsonAdsData = adsData.json()
 	numAds = 0
-	if not ("ads" not in jsonAdsData):
+	if "ads" in jsonAdsData:
 		ads = jsonAdsData["ads"]
 		# Add priceStr and mileage data to lists
 		for ad in ads:
@@ -118,13 +121,28 @@ def getMileage():
 
 	for km in mileageStr:
 		strLen = len(km)
-		if strLen > 11:
-			kmVal = int(km[0:strLen-11] + km[strLen-10:strLen-7] + km[strLen-6:strLen-3])
-		elif strLen <= 11 and strLen > 7:
-			kmVal = int(km[0:strLen-7] + km[strLen-6:strLen-3])
-		else:
-			kmVal = int(km[0:strLen-3])
 		
+		if km[strLen-2:strLen] == "mi":
+			multiplier = 1.60934
+		else:
+			multiplier = 1
+
+		km = km[0:strLen - 3]
+		#if strLen > 11:
+		#	kmVal = int(km[0:strLen-11] + km[strLen-10:strLen-7] + km[strLen-6:strLen-3])
+		#elif strLen <= 11 and strLen > 7:
+		#	kmVal = int(km[0:strLen-7] + km[strLen-6:strLen-3])
+		#else:
+		#	kmVal = int(km[0:strLen-3])
+
+		numLoops = (strLen // 4)
+		kmVal = km[0:strLen-((4 * numLoops) - 1)]
+		while numLoops > 0:
+			kmVal += km[strLen - ((4 * numLoops) - 2): strLen]
+			numLoops -= 1
+
+		kmVal = int(kmVal)
+
 		# If the user has given a value of 120 miles, they mean 120,000 miles
 		# If mileage is over 1 million, divide by 10
 		if kmVal < 1000:
@@ -132,10 +150,7 @@ def getMileage():
 		elif kmVal > 1000000:
 			kmVal = kmVal // 10
 
-		if km[strLen-2:strLen] == "mi":
-			mileage.append(kmVal * 1.60934)
-		else:
-			mileage.append(kmVal)
+		mileage.append(kmVal * multiplier)
 
 # Plot price vs mileage
 def plotData(make, model):
