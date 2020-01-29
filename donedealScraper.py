@@ -9,12 +9,9 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-priceStr = []
-mileageStr = []
 price = []
 mileage = []
 adUrl = []
-currency = [] 
 
 # Accept user inputted parameters
 def getInputParams():
@@ -77,10 +74,9 @@ def getAdsDataStrings(inputParams, start):
 		# Add priceStr and mileage data to lists
 		for ad in ads:
 			if ("price" in ad and len(ad["keyInfo"]) >= 3 and ad["keyInfo"][2] != ""):
-				priceStr.append(ad["price"])
-				mileageStr.append(ad["keyInfo"][2])
+				getPrice(ad["price"], ad["currency"])
+				getMileage(ad["keyInfo"][2])
 				adUrl.append(ad["friendlyUrl"])
-				currency.append(ad["currency"])
 
 		numAds = len(ads)
 
@@ -99,56 +95,37 @@ def getAdsData(inputParams):
 		numAds = getAdsDataStrings(inputParams, start)
 
 # Convert price strings to ints
-def getPrice():
+def getPrice(prc, currency):
 
-	i = 0
-	for prc in priceStr:
-		priceNum = int(prc.replace(",", ""))
+	priceNum = int(prc.replace(",", ""))
 
-		if currency[i] != "EUR":
-			priceNum = priceNum * 1.12
+	if currency != "EUR":
+		priceNum = priceNum * 1.12
 
-		price.append(priceNum)
-
-		i += 1
+	price.append(priceNum)
 
 # Convert mileage strings to ints and convert to kilometres
-def getMileage():
+def getMileage(km):
 
-	for km in mileageStr:
-		strLen = len(km)
-		
-		if km[strLen-2:strLen] == "mi":
-			multiplier = 1.60934
-		else:
-			multiplier = 1
+	strLen = len(km)
+	
+	if km[strLen-2:strLen] == "mi":
+		multiplier = 1.60934
+	else:
+		multiplier = 1
 
-		km = km[0:strLen - 3]
-		#if strLen > 11:
-		#	kmVal = int(km[0:strLen-11] + km[strLen-10:strLen-7] + km[strLen-6:strLen-3])
-		#elif strLen <= 11 and strLen > 7:
-		#	kmVal = int(km[0:strLen-7] + km[strLen-6:strLen-3])
-		#else:
-		#	kmVal = int(km[0:strLen-3])
+	km = km[0:strLen - 3]
 
-		#numLoops = (strLen // 4)
-		#kmVal = km[0:strLen-((4 * numLoops) - 1)]
-		#while numLoops > 0:
-		#	kmVal += km[strLen - ((4 * numLoops) - 2): strLen]
-		#	numLoops -= 1
+	kmVal = int(km.replace(",", ""))
 
-		#kmVal = int(kmVal)
+	# If the user has given a value of 120 miles, they mean 120,000 miles
+	# If mileage is over 1 million, divide by 10
+	if kmVal < 1000:
+		kmVal = kmVal * 1000
+	elif kmVal > 1000000:
+		kmVal = kmVal // 10
 
-		kmVal = int(km.replace(",", ""))
-
-		# If the user has given a value of 120 miles, they mean 120,000 miles
-		# If mileage is over 1 million, divide by 10
-		if kmVal < 1000:
-			kmVal = kmVal * 1000
-		elif kmVal > 1000000:
-			kmVal = kmVal // 10
-
-		mileage.append(kmVal * multiplier)
+	mileage.append(kmVal * multiplier)
 
 # Plot price vs mileage
 def plotData(make, model):
@@ -166,8 +143,6 @@ def main():
 	inputParams = getInputParams()
 	make, model = inputParams[0], inputParams[1]
 	getAdsData(inputParams)
-	getPrice()
-	getMileage()
 	plotData(make, model)
 
 if __name__ == "__main__":
