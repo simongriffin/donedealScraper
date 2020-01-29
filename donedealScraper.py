@@ -16,13 +16,6 @@ mileage = []
 adUrl = []
 currency = [] 
 
-# POST Request
-headers = {
-	'Content-Type': 'application/json',
-	'Accept': 'application/json',
-	'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'
-}
-
 # Accept user inputted parameters
 def getInputParams():
 	# Very basic form.  Return values as a list
@@ -43,10 +36,14 @@ def getInputParams():
 	return inputParams
 
 # Get ad data from each page
-def getAdsDataStrings(inputParams, start, end):
+def getAdsDataStrings(inputParams, start):
 
 	# Search URL
 	url = 'https://api.donedeal.ie/search/api/v4/find/'
+	end = start + 30
+
+	startStr = str(start)
+	endStr = str(end)
 
 	params = '{ \
 			"fuelType":"' + inputParams[4] + '", \
@@ -57,13 +54,20 @@ def getAdsDataStrings(inputParams, start, end):
 			"sort":"relevance desc", \
 			"priceStrType":"Euro", \
 			"mileageType":"Kilometres", \
-			"max":' + end + ',"start":' + start + ', \
+			"max":' + endStr + ',"start":' + startStr + ', \
 			"viewType":"list", \
 			"dependant":[{"parentName":"make", \
 			"parentValue":"' + inputParams[0] + '", \
 			"childName":"model", \
 			"childValues":["' + inputParams[1] + '"]}] \
 			}'
+
+	# POST Request
+	headers = {
+		'Content-Type': 'application/json',
+		'Accept': 'application/json',
+		'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'
+	}
 
 	adsData = requests.post(url, data=params, headers=headers, verify=False, allow_redirects=False)
 	jsonAdsData = adsData.json()
@@ -72,7 +76,7 @@ def getAdsDataStrings(inputParams, start, end):
 		ads = jsonAdsData["ads"]
 		# Add priceStr and mileage data to lists
 		for ad in ads:
-			if not ("price" not in ad or len(ad["keyInfo"]) < 3 or ad["keyInfo"][2] == ""):
+			if ("price" in ad and len(ad["keyInfo"]) >= 3 and ad["keyInfo"][2] != ""):
 				priceStr.append(ad["price"])
 				mileageStr.append(ad["keyInfo"][2])
 				adUrl.append(ad["friendlyUrl"])
@@ -88,26 +92,18 @@ def getAdsDataStrings(inputParams, start, end):
 def getAdsData(inputParams):
 
 	start = 0
-	end = 30
-	numAds = getAdsDataStrings(inputParams, str(start), str(end))
-	num = numAds
+	numAds = getAdsDataStrings(inputParams, start)
 	# While there are more ads to get, get them
 	while numAds == 30:
 		start += 30
-		end += 30
-		numAds = getAdsDataStrings(inputParams, str(start), str(end))
-		num += numAds
+		numAds = getAdsDataStrings(inputParams, start)
 
 # Convert price strings to ints
 def getPrice():
 
 	i = 0
 	for prc in priceStr:
-		strLen = len(prc)
-		if strLen > 4:
-			priceNum = int(prc[0:strLen-4] + prc[strLen-3:strLen])
-		else:
-			priceNum = int(prc)
+		priceNum = int(prc.replace(",", ""))
 
 		if currency[i] != "EUR":
 			priceNum = priceNum * 1.12
@@ -135,13 +131,15 @@ def getMileage():
 		#else:
 		#	kmVal = int(km[0:strLen-3])
 
-		numLoops = (strLen // 4)
-		kmVal = km[0:strLen-((4 * numLoops) - 1)]
-		while numLoops > 0:
-			kmVal += km[strLen - ((4 * numLoops) - 2): strLen]
-			numLoops -= 1
+		#numLoops = (strLen // 4)
+		#kmVal = km[0:strLen-((4 * numLoops) - 1)]
+		#while numLoops > 0:
+		#	kmVal += km[strLen - ((4 * numLoops) - 2): strLen]
+		#	numLoops -= 1
 
-		kmVal = int(kmVal)
+		#kmVal = int(kmVal)
+
+		kmVal = int(km.replace(",", ""))
 
 		# If the user has given a value of 120 miles, they mean 120,000 miles
 		# If mileage is over 1 million, divide by 10
